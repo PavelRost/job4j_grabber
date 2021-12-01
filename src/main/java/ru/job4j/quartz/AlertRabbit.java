@@ -3,12 +3,7 @@ package ru.job4j.quartz;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,10 +18,12 @@ public class AlertRabbit {
 
     private static Connection connection;
 
-    public static void init() {
+    private static Properties config;
+
+    public static void main(String[] args) {
         try (InputStream in =
                      AlertRabbit.class.getClassLoader().getResourceAsStream("rabbit.properties")) {
-            Properties config = new Properties();
+            config = new Properties();
             config.load(in);
             Class.forName(config.getProperty("driver-class-name"));
             connection = DriverManager.getConnection(
@@ -37,11 +34,7 @@ public class AlertRabbit {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    public static void main(String[] args) {
         try {
-            init();
             List<Long> store = new ArrayList<>();
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
@@ -52,7 +45,7 @@ public class AlertRabbit {
                     .usingJobData(data)
                     .build();
             SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(getInterval())
+                    .withIntervalInSeconds(Integer.parseInt(config.getProperty("interval")))
                     .repeatForever();
             Trigger trigger = newTrigger()
                     .startNow()
@@ -62,7 +55,6 @@ public class AlertRabbit {
             Thread.sleep(10000);
             scheduler.shutdown();
             System.out.println(store);
-
         } catch (SchedulerException | InterruptedException se) {
             se.printStackTrace();
         } finally {
@@ -94,25 +86,5 @@ public class AlertRabbit {
                 throwables.printStackTrace();
             }
         }
-    }
-
-    private static int getInterval() {
-        int rsl = -1;
-        Path path = Paths.get("src/main/resources/rabbit.properties");
-        if (path.toFile().length() == 0) {
-            throw new IllegalArgumentException("Файл пустой");
-        }
-        try (BufferedReader br = new BufferedReader(new FileReader(String.valueOf(path)))) {
-            String value = br.readLine();
-            if (value.contains("=")
-                    && !value.endsWith("=")
-                    && !value.contains("==")) {
-                String[] temp = value.split("=");
-                rsl = Integer.parseInt(temp[1]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return rsl;
     }
 }
