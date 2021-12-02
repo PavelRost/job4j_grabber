@@ -1,5 +1,11 @@
 package ru.job4j.grabber;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -30,5 +36,30 @@ public class Post {
     @Override
     public String toString() {
         return "Post{" + "id=" + id + ", title='" + title + '\'' + ", link='" + link + '\'' + ", description='" + description + '\'' + ", created=" + created + '}';
+    }
+
+
+    public void postDetails(String link) {
+        try {
+            Document doc = Jsoup.connect(link).get();
+            Elements description = doc.select(".msgBody");
+            for (Element td : description) {
+                Element parent = td.parent();
+                System.out.println(parent.child(1).text());
+                break;
+            }
+            Elements dateCreation = doc.select(".msgFooter");
+            for (Element td : dateCreation) {
+                System.out.println(td.text());
+                break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        Post post = new Post();
+        post.postDetails("https://www.sql.ru/forum/1325330/lidy-be-fe-senior-cistemnye-analitiki-qa-i-devops-moskva-do-200t");
     }
 }
