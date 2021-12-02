@@ -24,24 +24,32 @@ public class SqlRuDateTimeParser implements DateTimeParser {
     public LocalDateTime parse(String parse) {
         LocalDate yesterday = LocalDate.now().minusDays(1L);
         LocalDate tomorrow = LocalDate.now();
-        LocalDateTime ldt = null;
-        String months = "";
         String[] dateTime = parse.split(", ");
         String[] date = dateTime[0].split(" ");
         String[] time = dateTime[1].split(":");
+        int year = 0;
+        int month = 0;
+        int dayOfMonth = 0;
+        int hours = Integer.parseInt(time[0]);
+        int minutes = Integer.parseInt(time[1]);
         if (date.length != 1) {
             for (var key : MONTHS.keySet()) {
                 if (key.contains(date[1])) {
-                    months = MONTHS.get(key);
+                    month = Integer.parseInt(MONTHS.get(key));
                 }
             }
-            ldt = LocalDateTime.of(Integer.parseInt("20" + date[2]), Integer.parseInt(months), Integer.parseInt(date[0]), Integer.parseInt(time[0]), Integer.parseInt(time[1]));
+            year = Integer.parseInt("20" + date[2]);
+            dayOfMonth = Integer.parseInt(date[0]);
         }
         if ("сегодня".equals(date[0])) {
-            ldt = LocalDateTime.of(tomorrow.getYear(), tomorrow.getMonth(), tomorrow.getDayOfMonth(), Integer.parseInt(time[0]), Integer.parseInt(time[1]));
+            year = tomorrow.getYear();
+            month = tomorrow.getMonthValue();
+            dayOfMonth = tomorrow.getDayOfMonth();
         } else if ("вчера".equals(date[0])) {
-            ldt = LocalDateTime.of(yesterday.getYear(), yesterday.getMonth(), yesterday.getDayOfMonth(), Integer.parseInt(time[0]), Integer.parseInt(time[1]));
+            year = yesterday.getYear();
+            month = yesterday.getMonthValue();
+            dayOfMonth = yesterday.getDayOfMonth();
         }
-        return ldt;
+        return LocalDateTime.of(year, month, dayOfMonth, hours, minutes);
     }
 }
