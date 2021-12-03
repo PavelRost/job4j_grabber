@@ -22,21 +22,14 @@ public class AlertRabbit {
                      AlertRabbit.class.getClassLoader().getResourceAsStream("rabbit.properties")) {
             config = new Properties();
             config.load(in);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-        Connection connection;
-        try {
             Class.forName(config.getProperty("driver-class-name"));
-            connection = DriverManager.getConnection(
-                    config.getProperty("url"),
-                    config.getProperty("username"),
-                    config.getProperty("password")
-            );
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-        try {
+        try (Connection connection = DriverManager.getConnection(
+                config.getProperty("url"),
+                config.getProperty("username"),
+                config.getProperty("password"))) {
             List<Long> store = new ArrayList<>();
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
@@ -57,14 +50,8 @@ public class AlertRabbit {
             Thread.sleep(10000);
             scheduler.shutdown();
             System.out.println(store);
-        } catch (SchedulerException | InterruptedException se) {
+        } catch (SchedulerException | InterruptedException | SQLException se) {
             se.printStackTrace();
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
