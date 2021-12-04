@@ -10,26 +10,11 @@ public class PsqlStore implements Store, AutoCloseable {
     private Connection cnn;
 
     public PsqlStore(Properties cfg) {
-        String sql = String.format(
-                "create table if not exists post(%s, %s, %s, %s, %s);",
-                "id serial primary key",
-                "name text unique",
-                "text name",
-                "link text",
-                "created timestamp"
-        );
         try {
             Class.forName(cfg.getProperty("driver-class-name"));
             cnn = DriverManager.getConnection(cfg.getProperty("url"), cfg.getProperty("username"), cfg.getProperty("password"));
-            executeQuery(sql);
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void executeQuery(String sql) throws SQLException {
-        try (Statement statement = cnn.createStatement()) {
-            statement.execute(sql);
         }
     }
 
